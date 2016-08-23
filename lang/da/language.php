@@ -3,6 +3,6 @@
 $LANG = array();
 
 $LANG['Search'] = 'Søg';
-$LANG['Public'] = 'Offentlig';
+$LANG['View all'] = 'Se alt';
 $LANG['Private'] = 'Privat';
 $LANG['Results found'] = 'Resultater fundet';

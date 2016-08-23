@@ -2,19 +2,25 @@
 
 namespace modules\contentSearch;
 
+use diversen\conf;
+use diversen\db\admin;
 use diversen\db\fulltext;
+use diversen\db\q;
 use diversen\html;
 use diversen\lang;
-use diversen\conf;
+use diversen\moduleloader;
 use diversen\pagination;
 use diversen\strings\ext;
 use diversen\uri;
 use modules\content\article\module as article;
 use modules\content\book\module as book;
 use modules\content\export\module as export;
-use diversen\db\admin;
 
 class module {
+
+    public function __construct() {
+        moduleloader::setModuleIniSettings('content');
+    }
 
     public function form() {
         $f = new html();
@@ -28,19 +34,23 @@ class module {
         return $f->getStr();
     }
     
+    public function indexAction () {
+        
+    }
+
     /**
      * Generate search index
      */
-    public function genereateIndex () {
+    public function genereateIndex() {
         admin::dublicateTable('content_article', 'content_article_search');
-        admin::generateIndex('content_article_search', array ('title, abstract, article'));
+        admin::generateIndex('content_article_search', array('title, abstract, article'));
     }
 
     /**
      * /content/search/index action
      * Display all results from public books
      */
-    public function indexAction() {
+    public function searchAction() {
         echo $this->form();
 
         if (isset($_GET['search'])) {
@@ -53,7 +63,7 @@ class module {
      * User action. Display search by $user_id
      */
     public function userAction() {
-  
+
         echo $this->form();
 
         if (isset($_GET['search'])) {
@@ -62,10 +72,9 @@ class module {
             if (empty($q_extra)) {
                 return;
             }
-            
+
             $this->displayResults($q_extra);
         }
-        
     }
 
     /**
@@ -76,7 +85,7 @@ class module {
      * @return string $query SQL
      */
     public function getExtraFromUserId($user_id) {
-        
+
         $b = new book();
         $books = $b->getUserBooksPublic($user_id, 1);
         $ids = array_column($books, 'id');
@@ -89,8 +98,8 @@ class module {
 
         return $query;
     }
-    
-    public function getExtraFromPublic () {
+
+    public function getExtraFromPublic() {
         $b = new book();
         $books = $b->getAllBooksPublic();
         $ids = array_column($books, 'id');
@@ -102,7 +111,6 @@ class module {
         }
 
         return $query;
-        
     }
 
     /**
@@ -140,7 +148,7 @@ class module {
     public function displayMatches($rows) {
 
         foreach ($rows as $row) {
-            
+
             $row = html::specialEncode($row);
             $header = $this->getHeaderLink($row);
             echo html::getHeadline($header, 'h4');
@@ -154,56 +162,77 @@ class module {
             echo "<hr />";
         }
     }
-    
-    public function getHeaderLink ($row) {
+
+    public function getHeaderLink($row) {
         $b = new book();
         $a = new article();
-        $e = new export();
-        
+
+
         // Get article filtered
-        $article = $a->filterArticle($row);
-        
+        $row = $a->filterArticle($row);
+
         // Get book filtered
         $book = $b->getBook($row['parent_id']);
         $book = html::specialEncode($book);
-        
+
         // Get link type, e.g. 'html'
         $type = conf::getModuleIni('content_search_link');
-        
-        $header ='';
+
+
+        $header = '';
         if ($type == 'html') {
-            $ary = $e->getExportsAry($book);
-            
-            if (isset($ary['html'])) {
-                
-                // If HTML export exists 
-                $url = $ary['html'] . "#" . $this->generatePandocLink($row['title']);
-                $header = html::createLink($url, $article['title']);
-                $header.= MENU_SUB_SEPARATOR_SEC;
-                $header.= html::createLink($ary['html'],$book['title'] );
-            } else {
-                
-                // If html export does not exist
-                $header = $a->getArticleHtmlLink($row);
-                $header.= MENU_SUB_SEPARATOR_SEC;
-                $header.= \modules\content\book\views::getBookLink($book);
-            }
-            
+            $header = $this->getHtmlHeaderLink($book, $row);
             return $header;
-            
         }
-        
-        $header.= $a->getArticleHtmlLink($row);
-        $header.= MENU_SUB_SEPARATOR_SEC;
-        $header.= \modules\content\book\views::getBookLink($book);
+
+        $header = $this->getNormalHeaderLink($book, $row);
         return $header;
     }
-    
+
+    /**
+     * Get a link to an exported HTML book
+     * @param array $book
+     * @param array $row
+     * @return string $html
+     */
+    public function getHtmlHeaderLink($book, $row) {
+        $e = new export();
+        $ary = $e->getExportsAry($book);
+
+        if (isset($ary['html'])) {
+
+            // If HTML export exists 
+            $url = $ary['html'] . "#" . $this->generatePandocLink($row['title']);
+            $header = html::createLink($url, $row['title']);
+            $header .= MENU_SUB_SEPARATOR_SEC;
+            $header .= html::createLink($ary['html'], $book['title']);
+        } else {
+            $header = $this->getNormalHeaderLink($book, $row);
+        }
+        return $header;
+    }
+
+    /**
+     * Get a normal chapter / book link
+     * @param array $book
+     * @param array $row
+     * @return string $html
+     */
+    public function getNormalHeaderLink($book, $row) {
+        $a = new article();
+        // If html export does not exist
+        $header = $a->getArticleHtmlLink($row);
+        $header .= MENU_SUB_SEPARATOR_SEC;
+        $header .= \modules\content\book\views::getBookLink($book);
+        return $header;
+    }
+
+
     /**
      * Search form for all public books
      * List of all public books
      */
-    public function publicAction () {
+    public function publicAction() {
 
         echo $this->form();
 
@@ -212,17 +241,17 @@ class module {
             $this->displayResults($q_extra);
         }
     }
-    
+
     /**
      * Get all books a user collaborates on
      * @param int $user_id
      * @return array $rows
      */
-    public function getAllCollabBooks ($user_id) {
+    public function getAllCollabBooks($user_id) {
         $rows = q::select('contentusers', 'book_id')->filter('user_id =', $user_id)->fetch();
         return $rows;
     }
-    
+
     // Get:  minder-fra-cuba--foråret-2012
     // Real: minder-fra-cuba---foråret-2012
     /**
@@ -249,11 +278,12 @@ class module {
         $title = preg_replace('/[\:,\/!”]/', '', $title);
         $title = preg_replace("/[^[:alnum:][:space:][-]]/", '', $title);
 
-        $title = preg_replace('/\s+/','-', $title);
-        $title = preg_replace('/\s+/','-', $title);
+        $title = preg_replace('/\s+/', '-', $title);
+        $title = preg_replace('/\s+/', '-', $title);
         $title = str_replace(' ', '-', $title);
         $title = trim($title, '-');
         $title = mb_strtolower($title, 'UTF8');
         return $title;
     }
+
 }
