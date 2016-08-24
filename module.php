@@ -176,7 +176,7 @@ class module {
         $book = html::specialEncode($book);
 
         // Get link type, e.g. 'html'
-        $type = conf::getModuleIni('content_search_link');
+        $type = conf::getModuleIni('contentsearch_link');
 
 
         $header = '';
