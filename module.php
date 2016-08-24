@@ -15,6 +15,7 @@ use diversen\uri;
 use modules\content\article\module as article;
 use modules\content\book\module as book;
 use modules\content\export\module as export;
+use modules\contentsearch\display;
 
 class module {
 
@@ -167,7 +168,7 @@ class module {
 
             $row = html::specialEncode($row);
             $header = $this->getHeaderLink($row);
-            echo html::getHeadline($header, 'h4');
+            echo html::getHeadline($header, 'h3');
 
             $art = new article();
             $article = $art->filterArticle($row);
@@ -200,7 +201,12 @@ class module {
             $header = $this->getHtmlHeaderLink($book, $row);
             return $header;
         }
-
+        
+        if ($type == 'inline') {
+            $header = $this->getInlineHeaderLink($book, $row);
+            return $header;
+        }
+        
         $header = $this->getNormalHeaderLink($book, $row);
         return $header;
     }
@@ -241,6 +247,24 @@ class module {
         $chapter = $a->getArticleHtmlLink($row);
         $pub = \modules\content\book\views::getBookLink($book);
         return $this->getLink($chapter, $pub);
+    }
+    
+    /**
+     * Get a inline header link
+     * @param array $book
+     * @param array $row
+     * @return string $html
+     */
+    public function getInlineHeaderLink($book, $row) {
+        $d = new display();
+        $chapter = $d->getArticleHtmlLink($row);
+        $pub = $d->getBookLink($book);
+        return $this->getLink($chapter, $pub);
+    }
+    
+    public function viewAction () {
+        $d = new display();
+        $d->viewAction();
     }
     
     /**
