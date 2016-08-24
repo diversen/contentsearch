@@ -42,29 +42,34 @@ class views extends \modules\contentsearch\display {
         
     }
     
-    public function getHtmlMenu($ary, $start = null, $options = array()){
-        static $str = '';
-
-        if ($start) {
-            $str.= "<ol class=\"sortable\">\n";
-        } else {
-            $str.= "<ol>\n";
-        }
-
-        foreach ($ary as $val){
-            
-            $str.="<li id=\"list_$val[id]\">";
-            $str.='<div class="sortable-li">';
-            $str.= $this->getSortableLI($val, $options);
-            $str.= "</div>";
+    public function menuBegin () { ?>
+<div class="uk-sticky-placeholder">
+    <div class="uk-panel uk-panel-box uk-overflow-container" data-uk-sticky="{top:35, boundary: true, boundary:false, media: 768}">
+        <ul class="uk-nav uk-nav-side"><?php
+    }
+    
+    public function menuEnd() { ?>
+         </ul>
+    </div>
+</div><?php
+    }
+    
+    public function getHtmlMenu($ary){
+        
+        $str = '';
+        foreach ($ary as $key => $val){
+            $link = $this->getArticleHtmlLink($val);
+            $str.= "<li>$link";
+            // $str.= $this->getSortableLI($val, $options);
             if (!empty($val['sub'])){
-                $this->getHtmlMenu($val['sub'], false, $options);
+                $str.='<ul class="uk-nav-sub">';
+                $str.=$this->getHtmlMenu($val['sub']);
+                $str.= '</ul>';
             } 
+            
+            $str.= '</li>';
         }
 
-        if (!empty($ary)) {
-            $str.= "</li></ol>\n";
-        }
         
         return $str;
     }
@@ -86,7 +91,7 @@ class views extends \modules\contentsearch\display {
         ?>
 <div class="uk-grid" data-uk-grid-margin="">
     <div class="uk-width-1-1 uk-row-first">
-        <h1 class="uk-heading-large"><?=$book['title']?></h1>
+        <h1 id="begin-pub" class="uk-heading-large"><?=$book['title']?></h1>
         <p class="uk-text-large"><?=$book['abstract']?></p>
     </div>
 </div>
@@ -183,16 +188,19 @@ class views extends \modules\contentsearch\display {
     <div class="uk-width-medium-1-4"><?php
         
     // $this->menu();
-    include conf::pathModules() . "/contentsearch/html/menu.php";
-    
+    // include conf::pathModules() . "/contentsearch/html/menu.php";
+    $this->menuBegin();
+            $mMod = new \modules\content\menu\module();
+        $ary = $mMod->getSystemMenuArray($book['id']);
+        
+// print_r($ary); die;
+        echo $this->getHtmlMenu($ary);
+    $this->menuEnd();
     ?>
     </div>
     <?php
 
-        $mMod = new \modules\content\menu\module();
-        $ary = $mMod->getSystemMenuArray($book['id']);
 
-        $this->getHtmlMenu($ary, $start)
         
         ?>
         <div class="uk-width-medium-3-4 uk-row-first">
@@ -211,7 +219,7 @@ class views extends \modules\contentsearch\display {
         
         $title = $article['title'];
         
-        echo '<h2 id="chapter-begin">' . $title . "</h2>";
+        echo '<h2 id="begin-article">' . $title . "</h2>";
         echo $article['article'];
         
     }

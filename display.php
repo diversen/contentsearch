@@ -8,6 +8,7 @@ use diversen\strings;
 class display {
 
     public $basePath = '/contentsearch/view';
+
     
     /**
      * Get a link to the book, which means the first chapter
@@ -22,18 +23,24 @@ class display {
         
         
         $ary = reset($menu);
-        $url = $this->getArticleUrl($ary['id'], $ary['title']);
+        $url = $this->getArticleUrl($ary['id'], $ary['title'], '#begin-pub');
         return $title = html::createLink($url, $book['title']);
     }
+
     
-    
-    private function getArticleUrl($id, $title) {
-        return strings::utf8Slug("/contentsearch/view/$id", $title);
+    private function getArticleUrl($id, $title, $part = null) {
+        $url = strings::utf8Slug("/contentsearch/view/$id", $title);
+        if ($part) {
+            $url.=$part;
+        } else {
+            $url.= '#begin-article';
+        }
+        return $url;
         
     }
     
-    public function getArticleHtmlLink($row) {
-        $url = $this->getArticleUrl($row['id'], $row['title']);
+    public function getArticleHtmlLink($row, $part = null) {
+        $url = $this->getArticleUrl($row['id'], $row['title'], $part);
         return html::createLink($url, html::specialEncode($row['title']));
     }
     
@@ -58,7 +65,10 @@ class display {
         }
 
         // Check for perm moved
-        $this->checkPermMoved($row);
+        // $this->checkPermMoved($row);
+        
+        // after check of permed moved we set #part
+        // "#begin-article";
 
         // Get article's book 
         $b = new \modules\content\book\module();
