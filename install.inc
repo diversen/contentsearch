@@ -3,9 +3,8 @@
 
 use diversen\lang;
 
-
 $title = lang::translate('Search', null, array('no_translate' => true));
-$url = '/contentsearch/index';
+$url = '/contentsearch/search';
 
 $_INSTALL['MAIN_MENU_ITEMS'][] = array (
     'title' => $title,

@@ -15,7 +15,6 @@ class cron {
         }
         $minute = CronExpression::factory($cron);
         if ($minute->isDue()) {
-            echo "cron";
             $s = new search();
             $s->genereateIndex();
         }

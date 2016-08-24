@@ -16,3 +16,5 @@ $LANG['Private'] = 'Private';
 
 $LANG['Search'] = 'Search';
 $LANG['Results found'] = 'Results found';
+$LANG['Chapter'] = 'Chapter';
+$LANG['Publication'] = 'Publication';

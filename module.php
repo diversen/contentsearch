@@ -36,6 +36,22 @@ class module {
     
     public function indexAction () {
         
+        $per_page = 100;
+        $num_rows = q::numRows('content_book')->filter('public =', 1)->fetch();
+        
+        $p = new pagination($num_rows, $per_page);
+        $rows = q::select('content_book')->filter('public =', 1)->order('created', 'DESC')->limit($p->from, $per_page)->fetch();
+        $rows = html::specialEncode($rows);
+        $this->displayBooks($rows);
+        
+        echo $p->getPagerHTML();
+    }
+    
+    public function displayBooks ($books) {
+        foreach($books as $book) {
+            print_r($book);
+        }
+        
     }
 
     /**
@@ -54,7 +70,7 @@ class module {
         echo $this->form();
 
         if (isset($_GET['search'])) {
-            echo $q_extra = $this->getExtraFromPublic();
+            $q_extra = $this->getExtraFromPublic();
             $this->displayResults($q_extra);
         }
     }
@@ -202,11 +218,13 @@ class module {
         if (isset($ary['html'])) {
 
             // If HTML export exists 
-            $url = $ary['html'] . "#" . $this->generatePandocLink($row['title']);
-            $header = html::createLink($url, $row['title']);
-            $header .= MENU_SUB_SEPARATOR_SEC;
-            $header .= html::createLink($ary['html'], $book['title']);
+            $url = $ary['html'] . "#" . $this->getPandocLink($row['title']);
+            $chapter = html::createLink($url, $row['title']);
+            $pub = html::createLink($ary['html'], $book['title']);
+            $header = $this->getLink($chapter, $pub);
         } else {
+            
+            // Get inline link
             $header = $this->getNormalHeaderLink($book, $row);
         }
         return $header;
@@ -220,11 +238,55 @@ class module {
      */
     public function getNormalHeaderLink($book, $row) {
         $a = new article();
-        // If html export does not exist
-        $header = $a->getArticleHtmlLink($row);
-        $header .= MENU_SUB_SEPARATOR_SEC;
-        $header .= \modules\content\book\views::getBookLink($book);
+        $chapter = $a->getArticleHtmlLink($row);
+        $pub = \modules\content\book\views::getBookLink($book);
+        return $this->getLink($chapter, $pub);
+    }
+    
+    /**
+     * @param string $chapter html link
+     * @param string $pub html link
+     * @return string $header html
+     */
+    public function getLink ($chapter, $pub) {
+        $header = lang::translate("Chapter") . ' ' . $chapter . '. ';
+        $header.= lang::translate("Publication") . ' '; 
+        $header.= $pub;
         return $header;
+    }
+    
+    // Get:  minder-fra-cuba--foråret-2012
+    // Real: minder-fra-cuba---foråret-2012
+    /**
+     * Fra HTML Output
+     * musikbladet-september-2014
+     * skriftlig-eksamen-2014---og-især-opgave-3
+     * jens-dalsgaard-1939-2014
+     * innovation-et-fyord
+     * 
+     * Musikbladet-–-september-2014
+     * Skriftlig-eksamen-2014---og-især-opgave-3
+     * 
+     * referat-af-bestyrelsesmøde,-mandag-d.-18/3-i-århus.
+     * referat-af-bestyrelsesmøde-mandag-d.-183-i-århus.
+     * 
+     * Generate a pandoc hash link
+     * @param type $title
+     * @return type
+     */
+    public function getPandocLink($title) {
+
+        $title = preg_replace('/(\?+)/', '', $title);
+        $title = preg_replace('/[–]/', '', $title);
+        $title = preg_replace('/[\:,\/!”]/', '', $title);
+        $title = preg_replace("/[^[:alnum:][:space:][-]]/", '', $title);
+
+        $title = preg_replace('/\s+/', '-', $title);
+        $title = preg_replace('/\s+/', '-', $title);
+        $title = str_replace(' ', '-', $title);
+        $title = trim($title, '-');
+        $title = mb_strtolower($title, 'UTF8');
+        return $title;
     }
 
 
@@ -251,39 +313,4 @@ class module {
         $rows = q::select('contentusers', 'book_id')->filter('user_id =', $user_id)->fetch();
         return $rows;
     }
-
-    // Get:  minder-fra-cuba--foråret-2012
-    // Real: minder-fra-cuba---foråret-2012
-    /**
-     * Fra HTML Output
-     * musikbladet-september-2014
-     * skriftlig-eksamen-2014---og-især-opgave-3
-     * jens-dalsgaard-1939-2014
-     * innovation-et-fyord
-     * 
-     * Musikbladet-–-september-2014
-     * Skriftlig-eksamen-2014---og-især-opgave-3
-     * 
-     * referat-af-bestyrelsesmøde,-mandag-d.-18/3-i-århus.
-     * referat-af-bestyrelsesmøde-mandag-d.-183-i-århus.
-     * 
-     * Generate a pandoc hash link
-     * @param type $title
-     * @return type
-     */
-    public function generatePandocLink($title) {
-
-        $title = preg_replace('/(\?+)/', '', $title);
-        $title = preg_replace('/[–]/', '', $title);
-        $title = preg_replace('/[\:,\/!”]/', '', $title);
-        $title = preg_replace("/[^[:alnum:][:space:][-]]/", '', $title);
-
-        $title = preg_replace('/\s+/', '-', $title);
-        $title = preg_replace('/\s+/', '-', $title);
-        $title = str_replace(' ', '-', $title);
-        $title = trim($title, '-');
-        $title = mb_strtolower($title, 'UTF8');
-        return $title;
-    }
-
 }
