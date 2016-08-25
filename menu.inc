@@ -6,7 +6,7 @@ use diversen\session;
 $_MODULE_MENU = array();
 
 $_MODULE_MENU[] = array(
-    'title' => lang::translate('View all'),
+    'title' => lang::translate('Public'),
     'url' => '/contentsearch/index',
 );
 
@@ -17,7 +17,7 @@ $_MODULE_MENU[] = array(
 
 if (session::isUser()) {
     $_MODULE_MENU[] = array(
-        'title' => lang::translate('Private'),
+        'title' => lang::translate('Your books'),
         'url' => '/contentsearch/user',
     );
 }

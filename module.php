@@ -69,6 +69,7 @@ class module {
         $v = new \modules\contentsearch\views();
         // $d = new \modules\contentsearch\display();
         $d = new display();
+        $e = new export();
         //$chapter = $d->getArticleHtmlLink($row);
         
         // return $this->getLink($chapter, $pub);
@@ -80,7 +81,10 @@ class module {
             
             $ary = reset($menu);
             $type = \diversen\conf::getModuleIni('contentsearch_link');
-        
+            if (empty($ary)) {
+                echo html::getHeadline($book['title']);
+                continue;
+            }
             if ($type == 'html') {
                 $pub = $this->getPandocBookLink($book, $ary);
             } else {
@@ -89,6 +93,7 @@ class module {
             }
             
             echo html::getHeadline($pub);
+            // echo $e->getExportsHTML($book);
         // Get first article
             //$ary = reset($menu);
             
@@ -127,9 +132,11 @@ class module {
 
         echo $this->form();
 
+        
         if (isset($_GET['search'])) {
-            $user_id = uri::fragment(3);
+            $user_id = \diversen\session::getUserId();
             $q_extra = $this->getExtraFromUserId($user_id);
+            // die;
             if (empty($q_extra)) {
                 return;
             }
@@ -148,8 +155,17 @@ class module {
     public function getExtraFromUserId($user_id) {
 
         $b = new book();
-        $books = $b->getUserBooksPublic($user_id, 1);
-        $ids = array_column($books, 'id');
+        
+        // Own books
+        $books = $b->getUserBooks($user_id);
+        $user_ids = array_column($books, 'id');
+        
+        // Collab books
+        $collab = q::select('contentusers')->filter('user_id =', $user_id)->fetch();
+
+        $collab_ids = array_column($collab, 'book_id');
+   
+        $ids = array_merge($user_ids, $collab_ids);
         $query = '';
 
         if (!empty($ids)) {
@@ -265,8 +281,8 @@ class module {
 
             // If HTML export exists 
             $url = $ary['html'] . "#" . $this->getPandocLink($row['title']);
-            $chapter = html::createLink($url, $row['title']);
-            $pub = html::createLink($ary['html'], $book['title']);
+            $chapter = html::createLink($url, $row['title'], array('target' => '_blank'));
+            $pub = html::createLink($ary['html'], $book['title'], array('target' => '_blank'));
             $header = $this->getLink($chapter, $pub);
         } else {
             
@@ -276,7 +292,7 @@ class module {
         return $header;
     }
     
-        public function getPandocBookLink($book, $row) {
+    public function getPandocBookLink($book, $row) {
         $e = new export();
         $ary = $e->getExportsAry($book);
         $d = new display();
@@ -284,18 +300,17 @@ class module {
         if (isset($ary['html'])) {
 
             // If HTML export exists 
-            $url = $ary['html'] . "#" . $this->getPandocLink($row['title']);
+            // $url = $ary['html'] . "#" . $this->getPandocLink($row['title']);
             // $chapter = html::createLink($url, $row['title']);
-            $book_link = html::createLink($ary['html'], $book['title']);
+            $book_link = html::createLink($ary['html'], $book['title'], array('target' => '_blank'));
             // $header = $this->getLink($chapter, $pub);
         } else {
-            
+
             // Get inline link
             $book_link = $d->getBookLink($book);
         }
         return $book_link;
     }
-
 
     /**
      * Get a normal chapter / book link
