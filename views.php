@@ -84,7 +84,7 @@ class views extends \modules\contentsearch\display {
      * display header of chapter
      * @param array $row article
      */
-    public function header($book, $row) {
+    public function header($book, $row = array()) {
         if (empty($book['abstract'])) {
             $book['abstract'] = lang::translate('No abstract');
         }

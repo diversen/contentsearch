@@ -37,23 +37,67 @@ class module {
     
     public function indexAction () {
         
-        $per_page = 100;
+        $per_page = 50;
         $num_rows = q::numRows('content_book')->filter('public =', 1)->fetch();
         
         $p = new pagination($num_rows, $per_page);
         $rows = q::select('content_book')->filter('public =', 1)->order('created', 'DESC')->limit($p->from, $per_page)->fetch();
         $rows = html::specialEncode($rows);
-        $this->displayBooks($rows);
+        $this->displayBooksIndex($rows);
         
         echo $p->getPagerHTML();
     }
     
-    public function displayBooks ($books) {
+    public function displayBooksSearch ($books) {
+        $v = new \modules\contentsearch\views();
         foreach($books as $book) {
-            print_r($book);
-        }
+            
+            $mMod = new \modules\content\menu\module();
+            $menu = $mMod->getSystemMenuArray($book['id']);
         
+            $type = \diversen\conf::getModuleIni('contentsearch_link');
+        
+        // Get first article
+            $ary = reset($menu);
+            
+            echo $this->getPandocHeaderLinks($book, $ary);
+
+        }  
     }
+    
+    public function displayBooksIndex ($books) {
+        $v = new \modules\contentsearch\views();
+        // $d = new \modules\contentsearch\display();
+        $d = new display();
+        //$chapter = $d->getArticleHtmlLink($row);
+        
+        // return $this->getLink($chapter, $pub);
+        
+        foreach($books as $book) {
+            
+            $mMod = new \modules\content\menu\module();
+            $menu = $mMod->getSystemMenuArray($book['id']);
+            
+            $ary = reset($menu);
+            $type = \diversen\conf::getModuleIni('contentsearch_link');
+        
+            if ($type == 'html') {
+                $pub = $this->getPandocBookLink($book, $ary);
+            } else {
+                $d = new display();
+                $pub = $d->getBookLink($book);
+            }
+            
+            echo html::getHeadline($pub);
+        // Get first article
+            //$ary = reset($menu);
+            
+            //echo $this->getPandocHeaderLink($book, $ary);
+
+        }  
+    }
+    
+
 
     /**
      * Generate search index
@@ -154,7 +198,7 @@ class module {
         echo $num_rows . ' ' . lang::translate('Results found');
         echo "<hr />";
 
-        $this->displayMatches($rows);
+        $this->displaySearchMatches($rows);
         echo $p->getPagerHTML();
     }
 
@@ -162,12 +206,12 @@ class module {
      * Display matches
      * @param array $rows
      */
-    public function displayMatches($rows) {
+    public function displaySearchMatches($rows) {
 
         foreach ($rows as $row) {
 
             $row = html::specialEncode($row);
-            $header = $this->getHeaderLink($row);
+            $header = $this->getHeaderSearch($row);
             echo html::getHeadline($header, 'h3');
 
             $art = new article();
@@ -180,7 +224,7 @@ class module {
         }
     }
 
-    public function getHeaderLink($row) {
+    public function getHeaderSearch($row) {
         $b = new book();
         $a = new article();
 
@@ -198,16 +242,12 @@ class module {
 
         $header = '';
         if ($type == 'html') {
-            $header = $this->getHtmlHeaderLink($book, $row);
+            $header = $this->getPandocHeaderLinks($book, $row);
             return $header;
         }
+
         
-        if ($type == 'inline') {
-            $header = $this->getInlineHeaderLink($book, $row);
-            return $header;
-        }
-        
-        $header = $this->getNormalHeaderLink($book, $row);
+        $header = $this->getInlineSearchHeaderLinks($book, $row);
         return $header;
     }
 
@@ -217,7 +257,7 @@ class module {
      * @param array $row
      * @return string $html
      */
-    public function getHtmlHeaderLink($book, $row) {
+    public function getPandocHeaderLinks($book, $row) {
         $e = new export();
         $ary = $e->getExportsAry($book);
 
@@ -231,10 +271,31 @@ class module {
         } else {
             
             // Get inline link
-            $header = $this->getNormalHeaderLink($book, $row);
+            $header = $this->getInlineSearchHeaderLinks($book, $row);
         }
         return $header;
     }
+    
+        public function getPandocBookLink($book, $row) {
+        $e = new export();
+        $ary = $e->getExportsAry($book);
+        $d = new display();
+
+        if (isset($ary['html'])) {
+
+            // If HTML export exists 
+            $url = $ary['html'] . "#" . $this->getPandocLink($row['title']);
+            // $chapter = html::createLink($url, $row['title']);
+            $book_link = html::createLink($ary['html'], $book['title']);
+            // $header = $this->getLink($chapter, $pub);
+        } else {
+            
+            // Get inline link
+            $book_link = $d->getBookLink($book);
+        }
+        return $book_link;
+    }
+
 
     /**
      * Get a normal chapter / book link
@@ -242,10 +303,12 @@ class module {
      * @param array $row
      * @return string $html
      */
-    public function getNormalHeaderLink($book, $row) {
-        $a = new article();
-        $chapter = $a->getArticleHtmlLink($row);
-        $pub = \modules\content\book\views::getBookLink($book);
+    public function getInlineSearchHeaderLinks($book, $row) {
+        
+        $d = new \modules\contentsearch\display();
+        $d = new display();
+        $chapter = $d->getArticleHtmlLink($row);
+        $pub = $d->getBookLink($book);
         return $this->getLink($chapter, $pub);
     }
     
@@ -255,12 +318,13 @@ class module {
      * @param array $row
      * @return string $html
      */
+    /*
     public function getInlineHeaderLink($book, $row) {
         $d = new display();
         $chapter = $d->getArticleHtmlLink($row);
         $pub = $d->getBookLink($book);
         return $this->getLink($chapter, $pub);
-    }
+    }*/
     
     public function viewAction () {
         $d = new display();

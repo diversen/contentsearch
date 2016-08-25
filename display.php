@@ -21,8 +21,12 @@ class display {
         $mMod = new \modules\content\menu\module();
         $menu = $mMod->getSystemMenuArray($book['id']);
         
+        $type = \diversen\conf::getModuleIni('contentsearch_link');
         
+        // Get first article
         $ary = reset($menu);
+        
+        
         $url = $this->getArticleUrl($ary['id'], $ary['title'], '#begin-pub');
         return $title = html::createLink($url, $book['title']);
     }
