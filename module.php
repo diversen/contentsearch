@@ -73,6 +73,17 @@ class module {
         //$chapter = $d->getArticleHtmlLink($row);
         
         // return $this->getLink($chapter, $pub);
+        echo '<table class="uk-table">';
+        echo '<tr>';
+        echo '<th class="uk-width-3-10">';
+        echo lang::translate('Publication');
+        echo '</th>';
+        
+        echo '<th>';
+        echo lang::translate('Main author');
+        echo '</th>';
+        
+        echo '</tr>';
         
         foreach($books as $book) {
             
@@ -82,17 +93,25 @@ class module {
             $ary = reset($menu);
             $type = \diversen\conf::getModuleIni('contentsearch_link');
             if (empty($ary)) {
-                echo html::getHeadline($book['title']);
-                continue;
-            }
-            if ($type == 'html') {
+                $pub = $book['title'];
+                // continue;
+            } else if ($type == 'html') {
                 $pub = $this->getPandocBookLink($book, $ary);
             } else {
                 $d = new display();
                 $pub = $d->getBookLink($book);
             }
             
-            echo html::getHeadline($pub);
+            
+            echo '<tr>';
+            echo '<td class="uk-width-1-10">';
+            echo $pub;
+            echo '</td>';
+            echo '<td>';
+            echo  \diversen\user::getProfileLink($book['user_id']);
+            echo '</td>';
+            echo '</tr>';
+            
             // echo $e->getExportsHTML($book);
         // Get first article
             //$ary = reset($menu);
@@ -100,6 +119,7 @@ class module {
             //echo $this->getPandocHeaderLink($book, $ary);
 
         }  
+        echo '</table>';
     }
     
 

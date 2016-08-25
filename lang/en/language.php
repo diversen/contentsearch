@@ -15,6 +15,8 @@ $LANG['Your books'] = 'Your books';
 // Translation of file modules/contentsearch/module.php
 
 $LANG['Search'] = 'Search';
+$LANG['Publication'] = 'Publication';
+$LANG['Main author'] = 'Main author';
 $LANG['Results found'] = 'Results found';
 $LANG['Chapter'] = 'Chapter';
 $LANG['Publication'] = 'Publication';
