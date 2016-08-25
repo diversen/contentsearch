@@ -1,6 +1,6 @@
 <?php
 
-use modules\content\search\module as search;
+use modules\contentsearch\module as search;
 
 
 function content_generate_index () {
