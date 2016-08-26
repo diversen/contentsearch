@@ -32,7 +32,7 @@ class display {
     }
 
     
-    private function getArticleUrl($id, $title, $part = null) {
+    public function getArticleUrl($id, $title, $part = null) {
         $url = strings::utf8Slug("/contentsearch/view/$id", $title);
         if ($part) {
             $url.=$part;

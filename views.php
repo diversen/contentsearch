@@ -44,6 +44,7 @@ class views extends \modules\contentsearch\display {
     
     public function menuBegin () { ?>
 <div class="uk-sticky-placeholder">
+    
     <div class="uk-panel uk-panel-box uk-overflow-container" data-uk-sticky="{top:25, boundary: true, boundary:false, media: 768}">
         <ul class="uk-nav uk-nav-side"><?php
     }
@@ -59,7 +60,18 @@ class views extends \modules\contentsearch\display {
         $str = '';
         foreach ($ary as $key => $val){
             $link = $this->getArticleHtmlLink($val);
-            $str.= "<li>$link";
+            
+            $options = [];
+            $url = $this->getArticleUrl($val['id'], $val['title']);
+            // $url = $this->g
+            if ($url == $_SERVER['REQUEST_URI'] . '#begin-article') {
+                // die($url);
+                $class = 'class = "uk-active" ';
+            } else {
+                $class = '';
+            }
+            
+            $str.= "<li $class>$link";
             // $str.= $this->getSortableLI($val, $options);
             if (!empty($val['sub'])){
                 $str.='<ul class="uk-nav-sub">';
