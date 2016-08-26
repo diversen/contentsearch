@@ -45,7 +45,7 @@ class views extends \modules\contentsearch\display {
     public function menuBegin () { ?>
 <div class="uk-sticky-placeholder">
     
-    <div class="uk-panel uk-panel-box uk-overflow-container" data-uk-sticky="{top:25, boundary: true, boundary:false, media: 768}">
+    <div class="uk-panel uk-panel-box" data-uk-sticky="{top:25, boundary: true, boundary:false, media: 768}">
         <ul class="uk-nav uk-nav-side"><?php
     }
     
